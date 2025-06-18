@@ -6,6 +6,7 @@ import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModuleConstants;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.robot.RobotConstants;
+import org.littletonrobotics.junction.Logger;
 
 // Represents a swerve module using CTRE hardware components
 public class CTRESwerveModule implements SwerveModuleBase {
@@ -59,33 +60,24 @@ public class CTRESwerveModule implements SwerveModuleBase {
     // Sets the desired state for the swerve module, including speed and angle, with options for open loop control and motion override
     @Override
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop, boolean overrideMotion) {
-    //        IF YOU WANT TO ADJUST SWERVE PID, DEANNOTATE FOLLOWING LINES:
-    //        module.getSteerMotor().getConfigurator().apply(new Slot0Configs()
-    //                .withKP(RobotConstants.SwerveConstants.steerGainsClass.STEER_KP.get())
-    //                .withKI(RobotConstants.SwerveConstants.steerGainsClass.STEER_KI.get())
-    //                .withKD(RobotConstants.SwerveConstants.steerGainsClass.STEER_KD.get())
-    //                .withKA(RobotConstants.SwerveConstants.steerGainsClass.STEER_KA.get())
-    //                .withKV(RobotConstants.SwerveConstants.steerGainsClass.STEER_KV.get())
-    //                .withKS(RobotConstants.SwerveConstants.steerGainsClass.STEER_KS.get()));
-    //        module.getDriveMotor().getConfigurator().apply(new Slot0Configs()
-    //                .withKP(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KP.get())
-    //                .withKI(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KI.get())
-    //                .withKD(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KD.get())
-    //                .withKA(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KA.get())
-    //                .withKV(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KV.get())
-    //                .withKS(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KS.get()));
-    
-            module.apply(desiredState, isOpenLoop ? DriveRequestType.OpenLoopVoltage : DriveRequestType.Velocity);
-            // System.out.println(moduleNumber + " = " + desiredState.speedMetersPerSecond + " = "
-            // 		+ module.getDriveMotor().getMotorVoltage() + " " + module.getSteerMotor().getMotorVoltage());//speed output
-      /*
-      SmartDashboard.putNumber("Speed m/s", desiredState.speedMetersPerSecond);
-      SmartDashboard.putString("Drive Motor Voltage", module.getDriveMotor().getMotorVoltage());
-      SmartDashboard.putNumber("Steer Motor Voltage", module.getSteerMotor().getMotorVoltage());
-      */
-            // cnt++;
-            // if (cnt % 50 == 0) {
-            // 	System.out.println(desiredState.speedMetersPerSecond);
-            // }
+        //        IF YOU WANT TO ADJUST SWERVE PID, DEANNOTATE FOLLOWING LINES:
+        //        module.getSteerMotor().getConfigurator().apply(new Slot0Configs()
+        //                .withKP(RobotConstants.SwerveConstants.steerGainsClass.STEER_KP.get())
+        //                .withKI(RobotConstants.SwerveConstants.steerGainsClass.STEER_KI.get())
+        //                .withKD(RobotConstants.SwerveConstants.steerGainsClass.STEER_KD.get())
+        //                .withKA(RobotConstants.SwerveConstants.steerGainsClass.STEER_KA.get())
+        //                .withKV(RobotConstants.SwerveConstants.steerGainsClass.STEER_KV.get())
+        //                .withKS(RobotConstants.SwerveConstants.steerGainsClass.STEER_KS.get()));
+        //        module.getDriveMotor().getConfigurator().apply(new Slot0Configs()
+        //                .withKP(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KP.get())
+        //                .withKI(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KI.get())
+        //                .withKD(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KD.get())
+        //                .withKA(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KA.get())
+        //                .withKV(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KV.get())
+        //                .withKS(RobotConstants.SwerveConstants.driveGainsClass.DRIVE_KS.get()));
+
+        module.apply(desiredState, isOpenLoop ? DriveRequestType.OpenLoopVoltage : DriveRequestType.Velocity);
+        Logger.recordOutput("swerve/modules/" + moduleNumber + "/desiredState", desiredState);
+        Logger.recordOutput("swerve/modules/" + moduleNumber + "/currentState", module.getCurrentState());
     }
 }
