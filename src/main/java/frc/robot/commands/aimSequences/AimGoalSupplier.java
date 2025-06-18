@@ -88,26 +88,22 @@ public class AimGoalSupplier {
         return FieldConstants.officialAprilTagType.getLayout().getTagPose(getNearestTagID(robotPose)).get().toPose2d();
     }
 
-    public static boolean isInReefDangerZone(Pose2d robotPose) {
-        return (robotPose.getX() - getNearestTag(robotPose).getX() < 0.4
-                || robotPose.getY() - getNearestTag(robotPose).getY() < 0.4) &&
-                Math.abs(robotPose.getRotation().minus(getNearestTag(robotPose).getRotation()).getDegrees()) < 45;
-    }
-
     /**
      * Checks if the robot is in a hexagonal danger zone around the reef and facing towards it
      *
-     * @param robotPose Current pose of the robot
-     * @param dangerZoneRadius Radius of the hexagonal danger zone around the reef center (in meters)
+     * @param robotPose              Current pose of the robot
+     * @param dangerZoneRadius       Radius of the hexagonal danger zone around the reef center (in meters)
      * @param facingToleranceDegrees Maximum angle tolerance for considering the robot as "facing the reef" (in degrees)
      * @return true if robot is in hexagonal danger zone AND facing towards the reef
      */
     public static boolean isInHexagonalReefDangerZone(Pose2d robotPose, double dangerZoneRadius, double facingToleranceDegrees) {
         Translation2d reefCenter = AllianceFlipUtil.apply(Reef.center);
+        Translation2d EEPose = robotPose.getTranslation().plus(new Translation2d(-0.4, 0).rotateBy(robotPose.getRotation()));
         // Check if robot is inside the hexagonal danger zone
-        boolean isInHexagon = isPointInHexagon(robotPose.getTranslation(), reefCenter, dangerZoneRadius);
+        boolean isInHexagon = isPointInHexagon(EEPose, reefCenter, dangerZoneRadius);
+        Logger.recordOutput("DangerZone/EEPose", EEPose);
         Logger.recordOutput("DangerZone/IsInHexagon", isInHexagon);
-        
+
         if (!isInHexagon) {
             return false;
         }
@@ -115,11 +111,11 @@ public class AimGoalSupplier {
         // Check if robot is facing towards the reef center
         Translation2d robotToReef = reefCenter.minus(robotPose.getTranslation());
         Rotation2d angleToReef = new Rotation2d(robotToReef.getX(), robotToReef.getY());
-        
+
         // Robot's front is opposite to its rotation, so add 180 degrees
         Rotation2d robotFrontDirection = robotPose.getRotation().plus(Rotation2d.fromDegrees(180));
         double angleDifference = Math.abs(robotFrontDirection.minus(angleToReef).getDegrees());
-        
+
         // Normalize angle difference to [0, 180] range
         if (angleDifference > 180) {
             angleDifference = 360 - angleDifference;
@@ -127,7 +123,7 @@ public class AimGoalSupplier {
 
         boolean isFacingReef = angleDifference <= facingToleranceDegrees;
         Logger.recordOutput("DangerZone/IsFacingReef", isFacingReef);
-        
+
         return isFacingReef;
     }
 
@@ -140,20 +136,20 @@ public class AimGoalSupplier {
      */
     public static boolean isInHexagonalReefDangerZone(Pose2d robotPose) {
 
-        double defaultDangerZoneRadius = Reef.faceLength 
-            + RobotConstants.ReefAimConstants.HEXAGON_DANGER_ZONE_OFFSET.get()
-            + RobotConstants.ReefAimConstants.ROBOT_TO_ALGAE_METERS.get();
+        double defaultDangerZoneRadius = Reef.faceLength
+                + RobotConstants.ReefAimConstants.HEXAGON_DANGER_ZONE_OFFSET.get()
+                + RobotConstants.ReefAimConstants.ROBOT_TO_ALGAE_METERS.get();
         double defaultFacingTolerance = RobotConstants.ReefAimConstants.HEXAGON_DANGER_DEGREES.get(); // Default facing tolerance in degrees
-        
+
         return isInHexagonalReefDangerZone(robotPose, defaultDangerZoneRadius, defaultFacingTolerance);
     }
 
     /**
      * Checks if a point is inside a regular hexagon using the ray casting algorithm
      *
-     * @param point The point to check
+     * @param point     The point to check
      * @param hexCenter Center of the hexagon
-     * @param radius Distance from center to any vertex of the hexagon
+     * @param radius    Distance from center to any vertex of the hexagon
      * @return true if the point is inside the hexagon
      */
     private static boolean isPointInHexagon(Translation2d point, Translation2d hexCenter, double radius) {
@@ -161,19 +157,19 @@ public class AimGoalSupplier {
         Translation2d[] hexVertices = new Translation2d[6];
         Pose3d[] hexVertices3d = new Pose3d[6];
         double hexHeight = 0.5; // Height of danger zone vertices in meters
-        
+
         for (int i = 0; i < 6; i++) {
             double angle = Math.PI / 6.0 + Math.PI / 3.0 * i; // Start at 30° for flat-topped hexagon
             double x = hexCenter.getX() + radius * Math.cos(angle);
             double y = hexCenter.getY() + radius * Math.sin(angle);
             hexVertices[i] = new Translation2d(x, y);
-            
+
             // Create Pose3d vertex facing outward from the hexagon center
             Translation3d translation3d = new Translation3d(x, y, hexHeight);
             Rotation3d rotation3d = new Rotation3d(0, 0, angle + Math.PI / 2.0); // Rotate 90° so pose faces outward
             hexVertices3d[i] = new Pose3d(translation3d, rotation3d);
         }
-        
+
         // Log to AdvantageKit for visualization
         Logger.recordOutput("DangerZone/HexVertices3d", hexVertices3d);
         Logger.recordOutput("DangerZone/HexCenter", new Pose3d(hexCenter.getX(), hexCenter.getY(), hexHeight, new Rotation3d()));
@@ -187,9 +183,9 @@ public class AimGoalSupplier {
 
             // Check if horizontal ray from point intersects with this edge
             boolean intersects = ((vertex1.getY() > point.getY()) != (vertex2.getY() > point.getY())) &&
-                (point.getX() < (vertex2.getX() - vertex1.getX()) * (point.getY() - vertex1.getY()) / 
-                 (vertex2.getY() - vertex1.getY()) + vertex1.getX());
-            
+                    (point.getX() < (vertex2.getX() - vertex1.getX()) * (point.getY() - vertex1.getY()) /
+                            (vertex2.getY() - vertex1.getY()) + vertex1.getX());
+
             if (intersects) {
                 intersections++;
             }
